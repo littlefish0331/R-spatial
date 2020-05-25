@@ -6,12 +6,13 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+rm(list = ls()); invisible(gc())
 library(knitr)
 library(sf)
 library(sp)
-# library(rgdal)
-# library(raster)
-# library(rgeos)
+library(rgdal)
+library(raster)
+library(rgeos)
 library(dplyr)
 opts_chunk$set(echo = TRUE)
 ```
@@ -53,8 +54,8 @@ str(sp_lns_dfr)
 ```
 
 ```{r}
-lnstr_sfg1 <- st_linestring(matrix(runif(6), ncol=2))
-lnstr_sfg2 <- st_linestring(matrix(runif(6), ncol=2))
+lnstr_sfg1 <- st_linestring(matrix(runif(6), ncol = 2))
+lnstr_sfg2 <- st_linestring(matrix(runif(6), ncol = 2))
 class(lnstr_sfg1)
 lnstr_sfg1 %>% str
 lnstr_sfg1
@@ -95,7 +96,7 @@ st_crs(philly_homicides_sf)
 ```
 
 ```{r}
-st_write(philly_homicides_sf, "../data/PhillyHomicides", driver = "ESRI Shapefile")
+# st_write(philly_homicides_sf, "../data/PhillyHomicides", driver = "ESRI Shapefile")
 # to force the save:
 st_write(philly_homicides_sf, "../data/PhillyHomicides", driver = "ESRI Shapefile", 
          delete_layer = TRUE)
@@ -117,7 +118,7 @@ is.projected(philly_homicides_df) # see if a projection is defined
 ```{r}
 proj4string(philly_homicides_df) <- CRS("+init=epsg:4326") # this is WGS84
 is.projected(philly_homicides_df) # voila! hm. wait a minute..
-proj4string %>% str
+philly_homicides_df %>% str
 ```
 
 ```{r}
@@ -125,9 +126,10 @@ proj4string %>% str
 library(rgdal)
 
 # note that we need to save the philly_homicides_df, which we converted to sp object!
-writeOGR(obj = philly_homicides_df, 
-         dsn = "../data/PhillyHomicides", 
-         layer = "PhillyHomicides", driver = "ESRI Shapefile")
+# writeOGR(obj = philly_homicides_df, 
+#          dsn = "../data/PhillyHomicides", 
+#          layer = "PhillyHomicides", driver = "ESRI Shapefile")
+
 # to force save:
 writeOGR(obj = philly_homicides_df, 
          dsn = "../data/PhillyHomicides", 
@@ -196,7 +198,6 @@ r
 
 ```{r}
 class(r)
-r
 ```
 
 ```{r}
@@ -218,6 +219,7 @@ volcano %>% dim
 ```{r}
 volcano.r <- raster(x = volcano)
 class(volcano.r)
+# plot(volcano.r)
 ```
 
 ```{r}
@@ -226,6 +228,7 @@ HARV <- raster("../data/HARV_RGB_Ortho.tif")
 ```
 
 ```{r}
+# 注意 band: 1  (of  3  bands)
 HARV
 ```
 
@@ -258,8 +261,8 @@ GDALinfo("../data/HARV_RGB_Ortho.tif")
 ```
 
 ```{r}
-nlayers(HARV) #1，因為指讀取一個band
-nbands(HARV) #應該是用這個看有多少個 band 才對。
+nlayers(HARV) # 1，因為指讀取一個band
+nbands(HARV) # 應該是用這個看有多少個 band 才對。
 ```
 
 ```{r}
@@ -429,7 +432,7 @@ coords <- data.frame(x = 1750160, y = 467499.9) # set the coordinates
 prj <- CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs") # the projection string for AEA
 philly_ctr_sp <- SpatialPoints(coords, proj4string = prj) # create the spatialPoints
 philly_ctr_sp %>% str
-plot(philly_ctr_sp)
+# plot(philly_ctr_sp)
 ```
 
 ```{r}
@@ -437,7 +440,7 @@ philly_buf_sp <- gBuffer(spgeom = philly_ctr_sp, width=2000) # create buffer aro
 # 單位為meter
 
 # ---
-plot(philly_buf_sp)
+# plot(philly_buf_sp)
 philly_buf_sp %>% str
 ```
 
@@ -488,6 +491,131 @@ st_coordinates(philly_homicides_sf_aea) %>% range()
 par(mfrow=c(1,2))
 plot(st_geometry(philly_homicides_sf), axes=TRUE, main = "before transform - latlon")
 plot(st_geometry(philly_homicides_sf_aea), axes=TRUE, main = "after transform - aea")
+```
+
+```{r}
+st_write(obj = philly_homicides_sf_aea, 
+         dsn = "../data/PhillyHomicides_aea", 
+         driver = "ESRI Shapefile", 
+         delete_layer = T)
+```
+
+```{r}
+philly_homicides_sp <- readOGR(dsn = "../data/PhillyHomicides", 
+                               layer = "PhillyHomicides")
+```
+
+
+```{r}
+proj4string(philly_sp)
+proj4string(philly_homicides_sp)
+```
+
+```{r}
+philly_homicides_sp_aea <- spTransform(philly_homicides_sp, CRS(proj4string(philly_sp)))
+```
+
+```{r}
+## check the coordinates ##
+range(coordinates(philly_homicides_sp_aea))
+range(coordinates(philly_homicides_sp))
+```
+
+```{r}
+## write out
+writeOGR(obj = philly_homicides_sp_aea, 
+         dsn = "../data/PhillyHomicides_aea",
+         layer = "PhillyHomicides_aea", 
+         driver = "ESRI Shapefile", 
+         overwrite_layer = T)
+```
+
+```{r}
+# if you need to load again:
+HARV <- raster("../data/HARV_RGB_Ortho.tif")
+crs(HARV)
+```
+
+```{r}
+HARV_WGS84 <- projectRaster(HARV, crs = "+init=epsg:4326")
+```
+
+```{r}
+extent(HARV)
+extent(HARV_WGS84)
+```
+
+```{r}
+ncell(HARV)
+ncell(HARV_WGS84)
+```
+
+```{r}
+plot(HARV, main = "before transform - UTM")
+```
+
+```{r}
+plot(HARV_WGS84, main = "after transform - WGS84")
+```
+
+```{r}
+# ---
+# 地理訊息
+# philly_sf <- st_read(dsn = "../data/Philly", quiet = T)
+
+# ---
+# 犯罪數據
+# philly_homicides_sf <- st_read(dsn = "../data/PhillyHomicides")
+# philly_homicides_sf_aea <- st_transform(x = philly_homicides_sf, 
+#                                         crs = st_crs(philly_sf))
+
+```
+
+
+```{r}
+# 其實原本就有 Shape_area
+# 新計算的 tract_area，其實差不多。單位 sqare meter。
+philly_sf %>% head()
+
+# ---
+philly_sf %>% 
+  mutate(tract_area = st_area(geometry)) %>% 
+  head()
+```
+
+```{r}
+philly_homicides_sf_aea %>% head
+philly_homicides_sf_aea %>% dim
+```
+
+```{r}
+philly_sf %>% 
+  mutate(tract_area = st_area(geometry)) %>% 
+  st_join(philly_homicides_sf_aea) %>%
+  head()
+```
+
+```{r}
+# 原始版本的 unique 會出錯，因為 tract_area 計算出來的面積大小可能有誤差。
+# 雖然結果顯示 homic_rate 為[1/m^2]，但實際上我們已經轉換為[1/km^2]
+crime_rate <- philly_sf %>% 
+  mutate(tract_area = st_area(geometry)) %>%
+  st_join(philly_homicides_sf_aea) %>%
+  group_by(GEOID10) %>% 
+  summarize(n_homic = n(),
+            tract_area = tract_area[1],
+            homic_rate = n_homic/tract_area * 1e6) 
+```
+
+```{r}
+plot(crime_rate)
+plot(crime_rate[, "homic_rate"])
+```
+
+```{r}
+st_write(obj = crime_rate, 
+         dsn = "../data/PhillyCrimerate", 
+         driver = "ESRI Shapefile")
 ```
 
 
