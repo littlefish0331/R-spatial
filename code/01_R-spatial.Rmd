@@ -673,6 +673,11 @@ writeOGR(obj = ph_hom_count_sp,
          driver = "ESRI Shapefile", overwrite_layer = T)
 ```
 
+```{r}
+philly_crimes_sf <-  st_read(dsn = "../data/PhillyCrimerate", quiet = TRUE)
+plot(philly_crimes_sf)
+```
+
 
 
 
