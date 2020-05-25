@@ -1,0 +1,29 @@
+"0","philly_homicides_sf$geometry
+"
+"1","Geometry set for 3883 features "
+"1","
+"
+"1","geometry type:  POINT
+"
+"1","dimension:      XY
+"
+"1","bbox:           "
+"1","xmin: -75.26809 ymin: 39.87503 xmax: -74.95874 ymax: 40.13086"
+"1","
+"
+"1","epsg (SRID):    NA
+"
+"1","proj4string:    NA
+"
+"1","First 5 geometries:
+"
+"2","POINT (-75.1568 39.98804)
+"
+"2","POINT (-75.17873 39.92801)
+"
+"2","POINT (-75.18275 39.92607)
+"
+"2","POINT (-75.18092 39.92704)
+"
+"2","POINT (-75.17204 39.92463)
+"

@@ -1,0 +1,8 @@
+"0","HARV_stack <- stack(""data/HARV_RGB_Ortho.tif"")
+"
+"2","Error in .local(.Object, ...) : 
+
+"
+"2","Error in .rasterObjectFromFile(x, objecttype = ""RasterBrick"", ...) : 
+  Cannot create a RasterLayer object from this file. (file does not exist)
+"

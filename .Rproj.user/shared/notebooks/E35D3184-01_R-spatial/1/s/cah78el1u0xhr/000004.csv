@@ -1,0 +1,2 @@
+"0","philly_sp_rich <- subset(philly_sp, medHHinc > 60000)"
+"0","plot(philly_sp_rich, add=T, col=""red"")"

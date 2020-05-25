@@ -1,0 +1,2 @@
+"0","HARV_Band2 <- raster(""../data/HARV_RGB_Ortho.tif"", band = 2)"
+"0","plot(HARV_Band2)"
