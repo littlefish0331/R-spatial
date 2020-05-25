@@ -609,17 +609,60 @@ crime_rate <- philly_sf %>%
 
 ```{r}
 plot(crime_rate)
-plot(crime_rate[, "homic_rate"])
+plot(crime_rate[, "homic_rate"], main = "homic_rate[1/km^2]")
 ```
 
 ```{r}
+# 會爆出一堆eror
+# 這些error在GDAL驅動程序中，因此無法通過sf進行更改
+# 主要是數值轉換上的問題(我其實也沒有很懂XD)
+# - [st_write: values not successfully written · Issue #69 · HeritageNetwork/Regional_SDM](https://github.com/HeritageNetwork/Regional_SDM/issues/69)
+# - [Misleading warning · Issue #306 · r-spatial/sf](https://github.com/r-spatial/sf/issues/306)
+# - [#6803 (ogr2ogr complains possibly due to too larger number) – GDAL](https://trac.osgeo.org/gdal/ticket/6803)
+
+# ---
+# 總之，這個錯誤無法解決
+# 而且在讀取進來，class()型態為SpatialPolygonsDataFrame，不好使用~
+# 建議之後逐漸淘汰 shpafile 的作法
+
+# ---
 st_write(obj = crime_rate, 
          dsn = "../data/PhillyCrimerate", 
-         driver = "ESRI Shapefile")
+         driver = "ESRI Shapefile", delete_layer = T)
 ```
 
+```{r}
+# 拿哪一個變量都可以，因為我們只是算 length
+philly_homicides_sp_aea %>% names
 
+# ---
+ph_hom_count_sp <- aggregate(x = philly_homicides_sp_aea["OBJ_ID"], 
+                             by = philly_sp, FUN = length)
 
+# make sure we understand this error message:
+# aggregate(x = philly_homicides_sp_aea, by = philly_sp, FUN = length)
+```
+
+```{r}
+class(ph_hom_count_sp)
+names(ph_hom_count_sp)
+head(ph_hom_count_sp)
+```
+
+```{r}
+library(rgeos)
+gArea(ph_hom_count_sp, byid = T) %>% head()
+
+# we multiply by by 1000000 to get sq km.
+ph_hom_count_sp$homic_dens <- 1e6 * (ph_hom_count_sp$OBJ_ID/gArea(ph_hom_count_sp, byid = FALSE))
+
+hist(ph_hom_count_sp$homic_dens)
+```
+
+```{r}
+plot(ph_hom_count_sp)
+plot(ph_hom_count_sp[which(ph_hom_count_sp$homic_dens>0.03),], col = "red", add = T)
+```
 
 
 
