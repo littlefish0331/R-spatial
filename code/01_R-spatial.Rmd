@@ -626,9 +626,9 @@ plot(crime_rate[, "homic_rate"], main = "homic_rate[1/km^2]")
 # 建議之後逐漸淘汰 shpafile 的作法
 
 # ---
-st_write(obj = crime_rate, 
-         dsn = "../data/PhillyCrimerate", 
-         driver = "ESRI Shapefile", delete_layer = T)
+# st_write(obj = crime_rate,
+#          dsn = "../data/PhillyCrimerate",
+#          driver = "ESRI Shapefile", delete_layer = T)
 ```
 
 ```{r}
@@ -654,14 +654,23 @@ library(rgeos)
 gArea(ph_hom_count_sp, byid = T) %>% head()
 
 # we multiply by by 1000000 to get sq km.
-ph_hom_count_sp$homic_dens <- 1e6 * (ph_hom_count_sp$OBJ_ID/gArea(ph_hom_count_sp, byid = FALSE))
+ph_hom_count_sp$homic_dens <- 1e6 * (ph_hom_count_sp$OBJ_ID/gArea(ph_hom_count_sp, 
+                                                                  byid = TRUE))
 
 hist(ph_hom_count_sp$homic_dens)
 ```
 
 ```{r}
 plot(ph_hom_count_sp)
-plot(ph_hom_count_sp[which(ph_hom_count_sp$homic_dens>0.03),], col = "red", add = T)
+plot(ph_hom_count_sp[which(ph_hom_count_sp$homic_dens>20),], col = "red", add = T)
+```
+
+```{r}
+ph_hom_count_sp %>% str
+writeOGR(obj = ph_hom_count_sp, 
+         dsn = "../data/PhillyCrimerate", 
+         layer = "PhillyCrimerate", 
+         driver = "ESRI Shapefile", overwrite_layer = T)
 ```
 
 
