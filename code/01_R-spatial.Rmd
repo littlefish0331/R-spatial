@@ -678,6 +678,37 @@ philly_crimes_sf <-  st_read(dsn = "../data/PhillyCrimerate", quiet = TRUE)
 plot(philly_crimes_sf)
 ```
 
+```{r}
+plot(philly_crimes_sf$homic_rate) # this is a numeric vector!
+```
+
+```{r}
+philly_crimes_sf[, "homic_rate"] %>% plot()
+philly_crimes_sf$homic_rate %>% hist()
+```
+
+```{r}
+plot(philly_crimes_sf[, "homic_rate"], 
+     main = "Philadelphia homicide density per square km", 
+     breaks = "quantile")
+```
+
+```{r}
+library(RColorBrewer)
+pal <- brewer.pal(7, "OrRd") # we select 7 colors from the palette
+class(pal)
+```
+
+```{r}
+plot(philly_crimes_sf["homic_rate"], 
+     main = "Philadelphia homicide density per square km", 
+     breaks = "quantile", nbreaks = 7,
+     pal = pal)
+```
+
+
+
+
 
 
 
