@@ -1,10 +1,17 @@
-getwd() #確定目錄在 R-spatial/ 之下
+
+# ---
+# check your working directory
+getwd() 
+
+# ---
+# download the original material
 download.file(url = "http://bit.ly/R-spatial-data", 
-              destfile = "R-spatial-data.zip", 
+              destfile = "D:/R-spatial-data.zip", 
               mode = "wb")
 unzip("R-spatial-data.zip", exdir = "data")
 
 # ---
+# material section 1 & 2
 library(sf)
 library(sp)
 library(rgdal)
@@ -13,11 +20,12 @@ library(rgeos)
 library(dplyr)
 
 # ---
-library(classInt) #和tmap有版本上的對應要確認
+# material section 3 - Making Maps in R
+library(classInt) # need to check its version to match tmap package
 library(RColorBrewer)
 library(ggplot2)
 library(ggmap)
-library(tmap)
+library(tmap) # need right classInt's version to work
 library(leaflet)
 
 
