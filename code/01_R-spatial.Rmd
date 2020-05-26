@@ -8,14 +8,24 @@ output: html_document
 ```{r setup, include=FALSE}
 rm(list = ls()); invisible(gc())
 library(knitr)
+library(dplyr)
 library(sf)
 library(sp)
 library(rgdal)
 library(raster)
 library(rgeos)
-library(dplyr)
+library(classInt)
+library(RColorBrewer)
+library(ggplot2)
+library(ggmap)
+library(tmap)
+library(leaflet)
 opts_chunk$set(echo = TRUE)
 ```
+
+# section 1
+
+## section 1.1
 
 page 09
 
@@ -36,15 +46,21 @@ str(lns1)
 
 ```{r}
 sp_lns <- SpatialLines(list(lns1, lns2))
-str(sp_lns)
+# str(sp_lns)
 
 # ---
-sp_lns@bbox #會是所有line(即lines)的 x,y 之最大最小值。
+# plot successfully only if it is Spatial* class
+# plot(sp_lns)
+
+# ---
+sp_lns@bbox # min and max in both x and y
 ln1@coords[,1] %>% range
 ln1@coords[,2] %>% range
 ln2@coords[,1] %>% range
 ln2@coords[,2] %>% range
 ```
+
+page 10
 
 ```{r}
 dfr <- data.frame(id = c("hwy1", "hwy2"), # note how we use the same IDs from above!
@@ -53,38 +69,70 @@ sp_lns_dfr <- SpatialLinesDataFrame(sp_lns, dfr, match.ID = "id")
 str(sp_lns_dfr)
 ```
 
+page 11
+
 ```{r}
 lnstr_sfg1 <- st_linestring(matrix(runif(6), ncol = 2))
 lnstr_sfg2 <- st_linestring(matrix(runif(6), ncol = 2))
-class(lnstr_sfg1)
+
+# ---
+# see the class, structure and plot
+lnstr_sfg1 %>% class()
 lnstr_sfg1 %>% str
+lnstr_sfg1 %>% plot
 lnstr_sfg1
 ```
 
 ```{r}
 lnstr_sfc <- st_sfc(lnstr_sfg1, lnstr_sfg2) # just one feature here
+
+# ---
+# see the class, structure and plot
+lnstr_sfc %>% class
+lnstr_sfc %>% str
+lnstr_sfc %>% plot
 lnstr_sfc
 ```
 
 ```{r}
 lnstr_sf <- st_sf(dfr , lnstr_sfc)
+
+# ---
+# see the class, structure and plot
+lnstr_sf %>% class
+lnstr_sf %>% str
+lnstr_sf %>% plot
 lnstr_sf
 ```
+
+page 12
 
 ```{r}
 methods(class="sf")
 ```
 
+## section 1.2
+
+page 14
+
 ```{r}
 philly_homicides_df <- read.csv("../data/philly_homicides.csv")
-str(philly_homicides_df )
+
+# ---
+philly_homicides_df %>% class()
+philly_homicides_df %>% str()
 ```
 
 ```{r}
 philly_homicides_sf <- st_as_sf(philly_homicides_df, coords = c("POINT_X", "POINT_Y"))
-str(philly_homicides_sf)
+
+# ---
+philly_homicides_sf %>% class()
+philly_homicides_sf %>% str()
 philly_homicides_sf$geometry
 ```
+
+page 15
 
 ```{r}
 st_crs(philly_homicides_sf)
@@ -97,19 +145,30 @@ st_crs(philly_homicides_sf)
 
 ```{r}
 # st_write(philly_homicides_sf, "../data/PhillyHomicides", driver = "ESRI Shapefile")
+
+# ---
 # to force the save:
-st_write(philly_homicides_sf, "../data/PhillyHomicides", driver = "ESRI Shapefile", 
+st_write(obj = philly_homicides_sf, 
+         dsn = "../data/PhillyHomicides", 
+         driver = "ESRI Shapefile", 
          delete_layer = TRUE)
 ```
 
-```{r}
-class(philly_homicides_df)
-```
+### 1.2.2
+
+page 15
 
 ```{r}
+philly_homicides_df %>% class()
+
+# ---
+# original class is dataframe
+# after setting coordinate, its class become sp
 coordinates(philly_homicides_df) <- c("POINT_X", "POINT_Y")
-class(philly_homicides_df) #!!被轉換成 SpatialPointsDataFrame 惹~
+philly_homicides_df %>% class()
 ```
+
+page 16
 
 ```{r}
 is.projected(philly_homicides_df) # see if a projection is defined
