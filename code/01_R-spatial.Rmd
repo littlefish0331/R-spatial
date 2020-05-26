@@ -622,13 +622,13 @@ plot(crime_rate[, "homic_rate"], main = "homic_rate[1/km^2]")
 
 # ---
 # 總之，這個錯誤無法解決
-# 而且在讀取進來，class()型態為SpatialPolygonsDataFrame，不好使用~
-# 建議之後逐漸淘汰 shpafile 的作法
+# 也許建議之後逐漸淘汰 shpafile 的作法(?)
 
 # ---
-# st_write(obj = crime_rate,
-#          dsn = "../data/PhillyCrimerate",
-#          driver = "ESRI Shapefile", delete_layer = T)
+st_write(obj = crime_rate,
+         dsn = "../data/PhillyCrimerate", 
+         layer = "PhillyCrimerate_sf", 
+         driver = "ESRI Shapefile", delete_layer = T)
 ```
 
 ```{r}
@@ -666,20 +666,23 @@ plot(ph_hom_count_sp[which(ph_hom_count_sp$homic_dens>20),], col = "red", add = 
 ```
 
 ```{r}
-ph_hom_count_sp %>% str
+ph_hom_count_sp %>% head
 writeOGR(obj = ph_hom_count_sp, 
          dsn = "../data/PhillyCrimerate", 
-         layer = "PhillyCrimerate", 
+         layer = "PhillyCrimerate_sp", 
          driver = "ESRI Shapefile", overwrite_layer = T)
 ```
 
 ```{r}
-philly_crimes_sf <-  st_read(dsn = "../data/PhillyCrimerate", quiet = TRUE)
+philly_crimes_sf <-  st_read(dsn = "../data/PhillyCrimerate", 
+                             layer = "PhillyCrimerate_sf",
+                             quiet = TRUE)
 plot(philly_crimes_sf)
 ```
 
 ```{r}
-plot(philly_crimes_sf$homic_rate) # this is a numeric vector!
+# error!! because this is a numeric vector!
+# plot(philly_crimes_sf$homic_rate) 
 ```
 
 ```{r}
@@ -706,6 +709,210 @@ plot(philly_crimes_sf["homic_rate"],
      pal = pal)
 ```
 
+```{r}
+philly_crimes_sp <- readOGR(dsn = "../data/PhillyCrimerate", 
+                            layer = "PhillyCrimerate_sf", 
+                            verbose = FALSE) 
+names(philly_crimes_sp)
+```
+
+```{r}
+# spplot(philly_crimes_sp) #繪製速度有點慢，且會把 attribute 的所有值，放到同一尺度
+spplot(philly_crimes_sp, "homic_rate")
+spplot(philly_crimes_sp, c("n_homic", "homic_rate")) #會放到同一尺度，可能要學習進階設定
+```
+
+```{r}
+library(classInt)
+
+# quantile breaks
+breaks_qt <- classIntervals(philly_crimes_sp$homic_rate, n = 7, style = "quantile")
+br <- breaks_qt$brks 
+
+# 要包含上下界，所以擴充一點點
+offs <- 0.0000001 
+br[1] <- br[1] - offs 
+br[length(br)] <- br[length(br)] + offs 
+
+# categoreis for choropleth map
+philly_crimes_sp$homic_rate_bracket <- cut(philly_crimes_sp$homic_rate, br)
+
+# plot
+spplot(philly_crimes_sp, "homic_rate_bracket", 
+       col.regions = pal, 
+       main = "Philadelphia homicide density per square km")
+```
+
+```{r}
+# library(ggplot2)
+# ggplot(data = my_data_frame, 
+#        mapping = aes(x = name_of_column_with_x_value, 
+#                      y = name_of_column_with_y_value)) +
+#   geom_point()
+
+# ---
+# ggplot(my_data_frame, 
+#        aes(name_of_column_with_x_value, 
+#            name_of_column_with_y_value)) +
+#   geom_point()
+```
+
+```{r}
+ggplot(philly_crimes_sf) + 
+  geom_sf(aes(fill=homic_rate))
+```
+
+```{r}
+library(classInt)
+
+# get quantile breaks. Add .00001 offset to catch the lowest value
+breaks_qt <- classIntervals(var = c(min(philly_crimes_sf$homic_rate) - .00001,
+                                    philly_crimes_sf$homic_rate),
+                            n = 7, 
+                            style = "quantile")
+breaks_qt
+# breaks_qt$brks #顯示每一個 interval 的下界。
+```
+
+```{r}
+philly_crimes_sf <- mutate(philly_crimes_sf, homic_rate_cat = cut(homic_rate, breaks_qt$brks)) 
+
+ggplot(philly_crimes_sf) + 
+  geom_sf(aes(fill=homic_rate_cat)) +
+  scale_fill_brewer(palette = "OrRd") 
+```
+
+```{r}
+library(ggmap)
+# tmaptools::geocode_OSM("Philadelphia")
+# Philadelphia Lon is -75.16522 and Lat 39.95258 
+# -75.28030  39.86700 -74.95583  40.13796 
+
+ph_basemap <- get_stamenmap(bbox  = c(left = -75.28030, bottom = 39.86700, 
+                                      right = -74.95583, top = 40.13796), 
+                            zoom = 11, 
+                            maptype = 'terrain-background', 
+                            source = 'stamen')
+
+ggmap(ph_basemap)
+```
+
+```{r}
+ggmap(ph_basemap) +
+  geom_sf(data = philly_crimes_sf, 
+          aes(fill=homic_rate_cat), 
+          inherit.aes = FALSE) +
+    scale_fill_brewer(palette = "OrRd")
+```
+
+```{r}
+st_crs(philly_crimes_sf) #和 tile 的 CRS 不相同。
+
+ggmap(ph_basemap) +
+  geom_sf(data = philly_crimes_sf, 
+          aes(fill = homic_rate_cat), 
+          inherit.aes = FALSE) +
+  scale_fill_brewer(palette = "OrRd") +
+  coord_sf(crs = st_crs(4326))
+```
+
+```{r}
+library(tmap)
+tm_shape(philly_crimes_sf) +
+  tm_polygons(col = "homic_rate", 
+              style = "quantile", 
+              title = "Philadelphia \nhomicide density \nper sqKm")
+```
+
+```{r}
+tmap_mode("view")
+tmap_last()
+```
+
+```{r}
+library(leaflet) 
+
+# reproject
+philly_WGS84 <- st_transform(philly_crimes_sf, crs = 4326)
+
+leaflet(philly_WGS84) %>%
+  addPolygons()
+```
+
+```{r}
+pal_fun <- colorQuantile(palette = "YlOrRd", domain = NULL, n = 5)
+
+p_popup <- paste0("<strong>Homicide Density: </strong>", philly_WGS84$homic_rate)
+
+leaflet(philly_WGS84) %>%
+  addPolygons(
+    stroke = FALSE, # remove polygon borders
+    fillColor = ~pal_fun(homic_rate), # set fill color with function from above and value
+    fillOpacity = 0.8, smoothFactor = 0.5, # make it nicer
+    popup = p_popup)  # add popup
+```
+
+```{r}
+leaflet(philly_WGS84) %>%
+  addPolygons(
+    stroke = FALSE, 
+    fillColor = ~pal_fun(homic_rate),
+    fillOpacity = 0.8, smoothFactor = 0.5,
+    popup = p_popup) %>%
+  addTiles()
+```
+
+```{r}
+leaflet(philly_WGS84) %>%
+  addPolygons(
+    stroke = FALSE, 
+    fillColor = ~pal_fun(homic_rate),
+    fillOpacity = 0.8, smoothFactor = 0.5,
+    popup = p_popup) %>%
+  addTiles() %>%
+  addLegend(position = "bottomright",  # location
+            pal = pal_fun,    # palette function
+            values = ~homic_rate,  # value to be passed to palette function
+            opacity = 0.7,
+            title = 'Philadelphia homicide density per sqkm') # legend title
+```
+
+```{r}
+# 有七個區間
+philly_WGS84$homic_rate_cat %>% unique() %>% str
+```
+
+```{r}
+leaflet(philly_WGS84) %>%
+  addPolygons(
+    stroke = FALSE, 
+    fillColor = ~pal_fun(homic_rate),
+    fillOpacity = 0.8, smoothFactor = 0.5,
+    popup = p_popup) %>%
+  addTiles() %>%
+  addLegend("bottomright", 
+            colors = brewer.pal(7, "YlOrRd"), 
+            labels = paste0("up to ", format(x = breaks_qt$brks[-1], digits = 2)),
+            title =  'Philadelphia homicide density per sqkm')
+```
+
+```{r}
+leaflet(philly_WGS84) %>%
+  addPolygons(
+    stroke = FALSE, 
+    fillColor = ~pal_fun(homic_rate),
+    fillOpacity = 0.8, smoothFactor = 0.5,
+    popup = p_popup,
+    group = "philly") %>%
+  addTiles(group = "OSM") %>%
+  addProviderTiles("CartoDB.DarkMatter", group = "Carto") %>%
+  addLegend("bottomright", 
+            colors = brewer.pal(7, "YlOrRd"), 
+            labels = paste0("up to ", format(breaks_qt$brks[-1], digits = 2)),
+            title = 'Philadelphia homicide density per sqkm') %>%
+  addLayersControl(baseGroups = c("OSM", "Carto"), 
+                   overlayGroups = c("philly"))  
+```
 
 
 
