@@ -2,7 +2,7 @@
 
 last update: 2020-05-25
 
-[中文](##簡介) | [英文](##Introduction)
+[中文](##簡介) | [英文](##introduction)
 
 ## Introduction
 
