@@ -23,9 +23,15 @@ library(leaflet)
 opts_chunk$set(echo = TRUE)
 ```
 
-# section 1
+# Chapter 1
 
 ## section 1.1
+
+page 07
+
+### section 1.1.1
+
+page 08
 
 page 09
 
@@ -41,12 +47,16 @@ ln2 <- Line(matrix(runif(6), ncol=2))
 ```{r}
 lns1 <- Lines(list(ln1), ID = c("hwy1"))
 lns2 <- Lines(list(ln2), ID = c("hwy2"))
-str(lns1)
+
+# ---
+# lns1: just a geometric objects
+lns1 %>% class()
+lns1 %>% str()
 ```
 
 ```{r}
 sp_lns <- SpatialLines(list(lns1, lns2))
-# str(sp_lns)
+sp_lns %>% str()
 
 # ---
 # plot successfully only if it is Spatial* class
@@ -66,10 +76,16 @@ page 10
 dfr <- data.frame(id = c("hwy1", "hwy2"), # note how we use the same IDs from above!
 cars_per_hour = c(78, 22))
 sp_lns_dfr <- SpatialLinesDataFrame(sp_lns, dfr, match.ID = "id")
-str(sp_lns_dfr)
+sp_lns_dfr %>% str()
 ```
 
+### section 1.1.2
+
+page 10
+
 page 11
+
+page 12
 
 ```{r}
 lnstr_sfg1 <- st_linestring(matrix(runif(6), ncol = 2))
@@ -105,13 +121,83 @@ lnstr_sf %>% plot
 lnstr_sf
 ```
 
-page 12
+page 13
 
 ```{r}
 methods(class="sf")
 ```
 
+```{r}
+library(data.table)
+# Challenge
+# [R Spatial Cheatsheet](https://www.maths.lancs.ac.uk/~rowlings/Teaching/UseR2012/cheatsheet.html)
+```
+
+```{r}
+# ---
+# sp
+# points from scratch
+tmp_df <- data.table(t1 = LETTERS[1:5])
+set.seed(9527)
+pt_coords <- runif(10) %>% matrix(., ncol = 2)
+pt_sp = SpatialPoints(pt_coords)
+
+# make spatial data frame
+spdf = SpatialPointsDataFrame(pt_coords, tmp_df)
+spdf = SpatialPointsDataFrame(pt_sp, tmp_df)
+
+# promote data frame to spatial
+x <- runif(5); y <- runif(5)
+coordinates(tmp_df) = cbind(x, y)
+
+# back to data
+tmp_df %>% data.frame() #cannot use data.table()
+tmp_df$t1
+tmp_df %>% bbox
+tmp_df %>% str
+
+# manipulate data.frame
+tmp_df[tmp_df$t1 %in% c("B", "D", "E"), ]
+```
+
+```{r}
+# ---
+# sf
+tmp_df <- data.table(t1 = LETTERS[1:2])
+set.seed(9527)
+pt1_coords <- runif(10) %>% matrix(., ncol = 2)
+pt2_coords <- runif(10) %>% matrix(., ncol = 2)
+
+# points from scratch
+st_point(x = c(1,2))
+st_multipoint(x = pt1_coords)
+st_multipoint(x = pt1_coords, dim = "XY")
+ptstr_sfg1 <- st_multipoint(x = pt1_coords)
+ptstr_sfg2 <- st_multipoint(x = pt2_coords)
+ptstr_sfg1 %>% class
+# ptstr_sfg1 %>% str
+
+# combine all single feature objects
+ptstr_sfc <- st_sfc(ptstr_sfg1, ptstr_sfg2)
+# ptstr_sfc %>% class
+# ptstr_sfc %>% str
+
+# add atribute
+ptstr_sf <- st_sf(tmp_df, ptstr_sfc)
+ptstr_sf %>% class
+# ptstr_sf %>% str
+# ptstr_sf
+
+# manipulate data.fram
+# 可以用 dplyr
+# ptstr_sf[ptstr_sf$t1=="A", ]
+ptstr_sf %>% filter(t1=="A")
+st_bbox(ptstr_sf)
+```
+
 ## section 1.2
+
+## section 1.2.1
 
 page 14
 
@@ -154,7 +240,7 @@ st_write(obj = philly_homicides_sf,
          delete_layer = TRUE)
 ```
 
-### 1.2.2
+### section 1.2.2
 
 page 15
 
@@ -177,6 +263,10 @@ is.projected(philly_homicides_df) # see if a projection is defined
 ```{r}
 proj4string(philly_homicides_df) <- CRS("+init=epsg:4326") # this is WGS84
 is.projected(philly_homicides_df) # voila! hm. wait a minute..
+```
+
+```{r}
+# actually, projection is set successfully.
 philly_homicides_df %>% str
 ```
 
@@ -197,6 +287,12 @@ writeOGR(obj = philly_homicides_df,
          overwrite_layer = TRUE)
 ```
 
+## section 1.3
+
+### section 1.3.1
+
+page 16
+
 ```{r}
 # read in
 philly_sf <- st_read("../data/Philly")
@@ -206,6 +302,8 @@ philly_sf <- st_read("../data/Philly")
 philly_sf %>% str
 ```
 
+page 17
+
 ```{r}
 plot(philly_sf)
 ```
@@ -214,6 +312,8 @@ plot(philly_sf)
 philly_sf %>% st_geometry() %>% plot
 ```
 
+page 18
+
 ```{r}
 # subset the familar way
 philly_sf_rich <- philly_sf[philly_sf$medHHinc > 60000, ]
@@ -221,7 +321,7 @@ philly_sf_rich <- philly_sf[philly_sf$medHHinc > 60000, ]
 philly_sf_rich <- subset(philly_sf, medHHinc > 60000)
 
 # ---
-# 下面兩行一起執行
+# run the folloeing codes at same time
 philly_sf %>% st_geometry() %>% plot
 plot(st_geometry(philly_sf_rich), add = T, col = "red")
 ```
@@ -233,6 +333,10 @@ philly_sf %>%
   st_geometry() %>%
   plot(col = "red", add = T)
 ```
+
+### section 1.3.2
+
+page 19
 
 ```{r}
 library(rgdal)
@@ -249,8 +353,18 @@ philly_sp_rich <- subset(philly_sp, medHHinc > 60000)
 plot(philly_sp_rich, add = T, col = "red")
 ```
 
+## section 1.4
+
+page 20
+
 ```{r}
 library(raster)
+# specify the RasterLayer with the following parameters:
+# - minimum x coordinate (left border)
+# - minimum y coordinate (bottom border)
+# - maximum x coordinate (right border)
+# - maximum y coordinate (top border)
+# - resolution (cell size) in each dimension
 r <- raster(xmn=-0.5, ymn=-0.5, xmx=4.5, ymx=4.5, resolution = c(1,1))
 r
 ```
@@ -263,7 +377,10 @@ class(r)
 r <- setValues(x = r, values = runif(25))
 class(r)
 r
+r$layer@data
 ```
+
+page 21
 
 ```{r}
 coordinates(r) #coordinate會是grid的中心~
@@ -278,7 +395,10 @@ volcano %>% dim
 ```{r}
 volcano.r <- raster(x = volcano)
 class(volcano.r)
-# plot(volcano.r)
+
+# ---
+# plot
+plot(volcano.r)
 ```
 
 ```{r}
@@ -291,9 +411,13 @@ HARV <- raster("../data/HARV_RGB_Ortho.tif")
 HARV
 ```
 
+page 22
+
 ```{r}
 plot(HARV)
 ```
+
+page 22
 
 ```{r}
 crs(HARV)
@@ -302,6 +426,8 @@ crs(HARV)
 ```{r}
 methods(class = class(HARV))
 ```
+
+page 23
 
 ```{r}
 hist(HARV)
@@ -315,7 +441,10 @@ ncell(HARV)
 hist(HARV, maxpixels = ncell(HARV))
 ```
 
+page 24
+
 ```{r}
+# explore raster metadata before loading them
 GDALinfo("../data/HARV_RGB_Ortho.tif")
 ```
 
@@ -328,6 +457,8 @@ nbands(HARV) # 應該是用這個看有多少個 band 才對。
 HARV_Band2 <- raster("../data/HARV_RGB_Ortho.tif", band = 2)
 plot(HARV_Band2)
 ```
+
+page 25
 
 ```{r}
 HARV_stack <- stack("../data/HARV_RGB_Ortho.tif")
@@ -352,6 +483,10 @@ plot(HARV_stack)
 plotRGB(HARV_stack)
 ```
 
+### section 1.4.1
+
+page 27
+
 ```{r}
 object.size(HARV_stack)
 ```
@@ -360,6 +495,8 @@ object.size(HARV_stack)
 HARV_brick <- brick(HARV_stack)
 object.size(HARV_brick)
 ```
+
+page 28
 
 ```{r}
 # specify the grid topology with the following parameters:
@@ -379,17 +516,27 @@ coordinates(SpGdf) #coordinate會是grid的中心~
 plot(SpGdf); points(coordinates(SpGdf), pch = 3)
 ```
 
+# chapter 2
+
+## section 2.1
+
+page 29
+
 ```{r}
 ph_edu <- read.csv("../data/PhillyEducation.csv")
 names(ph_edu)
 ```
 
+### section 2.1.1
+
 ```{r}
 ## sf ##
 # if you need to read in again:
-# philly_sf <- st_read("../data/Philly")
+philly_sf <- st_read("../data/Philly")
 names(philly_sf)
 ```
+
+page 30
 
 ```{r}
 philly_sf_merged <- merge(x = philly_sf, y = ph_edu, 
@@ -397,17 +544,21 @@ philly_sf_merged <- merge(x = philly_sf, y = ph_edu,
 names(philly_sf_merged)
 ```
 
+### section 2.1.2
+
 ```{r}
 ## sp ##
 # if you need to read in again:
 philly_sp <- readOGR(dsn = "../data/Philly", layer = "PhillyTotalPopHHinc")
-```
 
-```{r}
 # this is sp::merge()
 philly_sp_merged <- sp::merge(philly_sp, ph_edu, by.x = "GEOID10", by.y = "GEOID")
 names(philly_sp_merged) # no geometry column here
 ```
+
+## section 2.2
+
+page 30
 
 ```{r}
 ## How about:
@@ -418,46 +569,69 @@ names(philly_sp_merged) # no geometry column here
 # 4. Select all census tract polygons that intersect with the center buffer
 ```
 
+### 2.2.1
+
+page 31
+
 ```{r}
 # if you need to read in again:
 philly_sf <- st_read(dsn = "../data/Philly", quiet = T)
+# philly_sf %>% class
 # philly_sf %>% str
 
+# ---
 # make a simple feature point with CRS
 philly_ctr_sfc <- st_point(c(1750160, 467499.9)) %>% st_sfc(., crs = 102003)
+# philly_ctr_sfc %>% class
+# philly_ctr_sfc %>% str
 philly_ctr_sfc
+
+# ---
 # plot(philly_ctr_sfc)
 ```
 
 ```{r}
-philly_buf_sf <- st_buffer(philly_ctr_sfc, dist = 2000) #單位為meter
+# st_crs(philly_ctr_sfc)$units # unit is meter
+philly_buf_sf <- st_buffer(philly_ctr_sfc, dist = 2000) # unit is meter
 philly_buf_sf
+
+# ---
 # plot(philly_buf_sf)
 ```
 
 ```{r}
-philly_buf_intersects <- st_intersects(philly_buf_sf, philly_sf)
+# ---
+# check projection
+philly_buf_sf %>% st_crs()
+philly_sf %>% st_crs()
+st_crs(philly_buf_sf) == st_crs(philly_sf)
 
-#> Error in st_geos_binop("intersects", x, y, sparse = sparse, prepared = prepared) :
-#> st_crs(x) == st_crs(y) is not TRUE
+# ---
+philly_buf_intersects <- st_intersects(x = philly_buf_sf, y = philly_sf)
 ```
 
 ```{r}
+# if above code fail, check those spatial objects coordinates
 st_crs(philly_sf)
+st_crs(philly_buf_sf)
 ```
 
+
+
+
+page 32
+
 ```{r}
+st_crs(philly_sf) <- 102003
+
+# ---
+st_crs(philly_sf)
 st_crs(philly_buf_sf)
 ```
 
 ```{r}
-st_crs(philly_sf) <- 102003
-st_crs(philly_sf)
-```
-
-```{r}
 philly_buf_intersects <- st_intersects(philly_buf_sf, philly_sf)
-class(philly_buf_intersects)
+philly_buf_intersects %>% class()
 ```
 
 ```{r}
