@@ -695,7 +695,7 @@ philly_buf_intersects <-  gIntersects(spgeom1 = philly_buf_sp,
                                       byid=TRUE) 
 
 # what kind of object is this?
-class(philly_buf_intersects)# matrix
+class(philly_buf_intersects)# matrix, TRUE or FALSE
 # philly_buf_intersects %>% dim #384 1
 
 # subset
@@ -859,7 +859,7 @@ philly_homicides_sf_aea %>% head
 # dimension: 3886 27(9+18-1+1)
 philly_sf %>% 
   mutate(tract_area = st_area(geometry)) %>% 
-  st_join(y = ., x = philly_homicides_sf_aea) %>% 
+  st_join(x = ., y = philly_homicides_sf_aea) %>% 
   head()
 ```
 
