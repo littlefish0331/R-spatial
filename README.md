@@ -1,6 +1,7 @@
 # README
 
-last update: 2020-05-25
+last update: 2020-06-13  
+移到 Github Repository: R_package_learning_note
 
 [中文](#簡介) | [英文](#introduction)
 
